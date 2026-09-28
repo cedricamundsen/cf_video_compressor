@@ -7,6 +7,28 @@ the CombatFlux FlutterFlow app, Cloudinary, Firebase or the Cloud Function, and 
 - No FFmpeg and no third-party compression package.
 - iOS (AVAssetReader/AVAssetWriter) plugs in later behind `CfVideoCompressorPlatform`.
 
+## Production use (CombatFlux B1)
+
+The CombatFlux app pulls this package as a Git dependency pinned to a commit
+SHA. Its FlutterFlow custom actions use:
+
+- `CfVideoCompressor.pickVideo()` and `getVideoInfo()` for picking and metadata.
+- `AnalysisVideoPreparer` for the full flow: decide whether to compress, check
+  free space, then either stream-copy a source that is already ≤ 95 MiB or
+  compress with one 85 % retry, and verify the size. It returns a temp file of
+  ≤ 95 MiB, which the app hands to its existing uploader. Afterwards it cleans
+  up the temp files.
+
+Error kinds (`PrepareFailure`):
+
+- `tooLong`
+- `unsupportedInput`
+- `sourceUnreadable`
+- `insufficientStorage`
+- `compressionFailed`
+- `stillTooLarge`
+- `cancelled`
+
 ## Layout
 
 | Path | What |
@@ -14,12 +36,13 @@ the CombatFlux FlutterFlow app, Cloudinary, Firebase or the Cloud Function, and 
 | `lib/src/planner.dart` | Pure-Dart rules: duration → bitrate → 720p/540p/reject; 85 % retry plan |
 | `lib/src/compressor.dart` | `CfVideoCompressor`: attempt 1 → (if > 95 MiB) one retry → report |
 | `lib/src/platform.dart` | Platform contract + MethodChannel/EventChannel implementation |
+| `lib/src/preparer.dart` | Production orchestrator used by the CombatFlux app |
 | `lib/src/models.dart` | `VideoInfo`, `CompressionPlan`, `CompressionAttempt`, `CompressionReport` |
 | `android/.../CompressionJob.kt` | One Media3 Transformer export, progress poll, cancel |
 | `android/.../VideoProbe.kt` | Size/duration/dimensions/rotation/fps/codecs without loading the file |
 | `android/.../OutputStore.kt` | Temp outputs `<externalCache>/cf_compress/cf_<ms>_a<n>.mp4` |
 | `example/` | Test app: pick → info → plan → compress (live %) → cancel → report → play |
-| `test/` | 28 unit tests (planner + retry orchestration with a fake platform) |
+| `test/` | 43 unit tests (planner, retry orchestration, production preparer; fake platform) |
 
 ## One-time setup (build machine)
 
