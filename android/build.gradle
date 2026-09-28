@@ -1,0 +1,59 @@
+group = "com.combatflux.cf_video_compressor"
+version = "0.0.1-poc"
+
+buildscript {
+    ext.kotlin_version = "2.2.20"
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.11.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+// Pinned. Media3 1.11.1 = latest stable (2026-09-10); requires minSdk 23.
+def media3_version = "1.11.1"
+
+android {
+    namespace = "com.combatflux.cf_video_compressor"
+
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+    }
+
+    defaultConfig {
+        // Media3 1.11 minimum; matches the CombatFlux app (minSdkVersion 23).
+        minSdk = 23
+    }
+
+    dependencies {
+        implementation("androidx.media3:media3-transformer:$media3_version")
+        implementation("androidx.media3:media3-effect:$media3_version")
+        implementation("androidx.media3:media3-common:$media3_version")
+        implementation("androidx.annotation:annotation-experimental:1.4.1")
+    }
+}

@@ -1,0 +1,25 @@
+name: cf_video_compressor_example
+description: "CombatFlux Phase B0: Android compression test app."
+publish_to: 'none'
+version: 0.0.1+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cf_video_compressor:
+    path: ../
+  # Same version the CombatFlux FlutterFlow app already uses.
+  video_player: 2.10.0
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
