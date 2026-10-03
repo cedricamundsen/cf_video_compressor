@@ -84,19 +84,35 @@ class AnalysisVideoPreparer {
   AnalysisVideoPreparer({
     CfVideoCompressor? compressor,
     void Function(String line)? log,
+    this.requireMp4H264 = false,
   })  : compressor = compressor ?? CfVideoCompressor(),
         _log = log ?? ((_) {});
 
   final CfVideoCompressor compressor;
   final void Function(String line) _log;
 
+  /// When true, a source that already fits is only uploaded as it is if it
+  /// is H.264 in an .mp4/.m4v file; anything else (e.g. iPhone HEVC .MOV) is
+  /// compressed so every upload is H.264/AAC MP4. Default false: Android
+  /// behaviour is unchanged.
+  final bool requireMp4H264;
+
   PlannerConfig get config => compressor.planner.config;
+
+  /// True for an H.264 video in an .mp4/.m4v file.
+  static bool isMp4H264(VideoInfo info) {
+    final path = Uri.tryParse(info.uri)?.path ?? info.uri;
+    final dot = path.lastIndexOf('.');
+    final ext = dot < 0 ? '' : path.substring(dot + 1).toLowerCase();
+    return info.videoMime == 'video/avc' && (ext == 'mp4' || ext == 'm4v');
+  }
 
   /// Pure decision (unit-tested). Sources already <= the hard limit are
   /// uploaded as they are; bigger ones are compressed unless too long.
   VideoDecision decide(VideoInfo info) {
     final limit = config.hardLimitBytes;
-    if (info.sizeBytes > 0 && info.sizeBytes <= limit) {
+    final fits = info.sizeBytes > 0 && info.sizeBytes <= limit;
+    if (fits && (!requireMp4H264 || isMp4H264(info))) {
       return VideoDecision.upload(
           'source ${formatMiB(info.sizeBytes)} <= ${formatMiB(limit)}: no recompression');
     }
@@ -109,8 +125,12 @@ class AnalysisVideoPreparer {
         return VideoDecision.reject(PrepareFailure.tooLong,
             'needs ${formatMbps(plan.videoBitrate)} (< ${formatMbps(config.sdMinVideoBitrate)} floor)');
       case PlanStatus.ok:
-        return VideoDecision.compress(plan,
-            'source ${info.sizeBytes < 0 ? 'size unknown' : formatMiB(info.sizeBytes)} > ${formatMiB(limit)}: compress');
+        return VideoDecision.compress(
+            plan,
+            fits
+                ? 'source ${formatMiB(info.sizeBytes)} fits but is ${info.videoMime ?? 'unknown codec'} '
+                    'outside an MP4: convert to H.264/AAC MP4'
+                : 'source ${info.sizeBytes < 0 ? 'size unknown' : formatMiB(info.sizeBytes)} > ${formatMiB(limit)}: compress');
     }
   }
 

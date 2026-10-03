@@ -1,6 +1,6 @@
 name: cf_video_compressor
-description: "CombatFlux Phase B0 POC: on-device video compression with the platform's hardware encoder (Android: Media3 Transformer). Isolated feasibility test; not used by the production app."
-version: 0.0.1-poc
+description: "CombatFlux on-device video compression with the platform's hardware encoder (Android: Media3 Transformer, iOS: AVFoundation AVAssetReader/AVAssetWriter)."
+version: 0.2.0
 publish_to: 'none'
 
 environment:
@@ -23,5 +23,6 @@ flutter:
       android:
         package: com.combatflux.cf_video_compressor
         pluginClass: CfVideoCompressorPlugin
-      # iOS (AVAssetReader / AVAssetWriter) plugs in here later behind the
-      # same CfVideoCompressorPlatform interface. Not part of Phase B0.
+      # Same CfVideoCompressorPlatform contract (channels, methods, codes).
+      ios:
+        pluginClass: CfVideoCompressorPlugin

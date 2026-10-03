@@ -5,7 +5,14 @@ the CombatFlux FlutterFlow app, Cloudinary, Firebase or the Cloud Function, and 
 
 - Android: Media3 Transformer 1.11.1 with the hardware H.264 encoder and AAC audio.
 - No FFmpeg and no third-party compression package.
-- iOS (AVAssetReader/AVAssetWriter) plugs in later behind `CfVideoCompressorPlatform`.
+- iOS (0.2.0, branch `ios-avfoundation`): AVFoundation - AVAssetReader with a video composition
+  (upright output, 720p/540p scale, <= 30 fps, HDR -> SDR BT.709) and AVAssetWriter (H.264 High +
+  AAC, MP4 with the index at the front). Same channels, methods and error codes as Android.
+  Picker: PHPickerViewController (no photo-library permission; original file copied to
+  `<tmp>/cf_picked` on disk). Privacy manifest: disk-space API, reason E174.1.
+  `AnalysisVideoPreparer(requireMp4H264: true)` makes iOS convert small HEVC/.MOV sources
+  to H.264 MP4 (default false: Android unchanged).
+  **Not yet compiled or device-tested** - first build needs a Mac with Xcode.
 
 ## Production use (CombatFlux B1)
 
